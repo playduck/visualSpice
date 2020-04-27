@@ -60,10 +60,14 @@ class visualSpiceWindow(QtWidgets.QMainWindow):
 
         # add nodeScene
         self.mainNodeScene = NodeScene.NodeScene()
-
         self.sceneTabWidget.addTab(self.mainNodeScene.scene, "Main")
+        self.mainNodeScene.scene.signal_NodeSelected.connect(self.nodeSelected)
 
         self.show()
+
+    def nodeSelected(self, selectedNodes):
+        print('node selected : ', selectedNodes)
+
 
 if __name__ == "__main__":
 

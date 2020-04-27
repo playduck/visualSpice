@@ -11,7 +11,7 @@ class NodeScene(object):
         self.scene = nodz_main.Nodz(None)
         # self.scene.loadConfig(filePath='./default_config.json')
         self.scene.initialize()
-        self.scene.gridVisToggle = False
+        self.scene.gridVisToggle = True
         self.scene.gridSnapToggle = False
 
         # Node A
@@ -34,9 +34,9 @@ class NodeScene(object):
         self.scene.createAttribute(node=nodeB, name='Battr1', index=-1, preset='attr_preset_1',
                             plug=True, socket=False, dataType=str)
         self.scene.createAttribute(node=nodeB, name='Battr2', index=-1, preset='attr_preset_1',
-                            plug=True, socket=False, dataType=int)
+                            plug=True, socket=True, dataType=int)
         self.scene.createAttribute(node=nodeB, name='Battr3', index=-1, preset='attr_preset_2',
-                            plug=True, socket=False, dataType=int)
+                            plug=True, socket=True, dataType=int)
         self.scene.createAttribute(node=nodeB, name='Battr4', index=-1, preset='attr_preset_3',
                             plug=True, socket=False, dataType=int, plugMaxConnections=1, socketMaxConnections=-1)
 
@@ -46,3 +46,4 @@ class NodeScene(object):
 
         # Graph
         print(">>> EVAL",  self.scene.evaluateGraph() )
+        print(self.scene.scene().nodes)
