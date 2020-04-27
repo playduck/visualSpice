@@ -4,6 +4,8 @@ abstrakter high-level Schaltkreis Simulator
 
 ## Install
 
+mit python > 3.7.7
+
 1. Repository klonen:
     - `git clone https://github.com/playduck/visualSpice.git`
     - `cd visualSpice`
@@ -16,7 +18,11 @@ abstrakter high-level Schaltkreis Simulator
     - `pip install --upgrade pip`
 3. Module installieren
     - `pip install -r requirements.txt`
+4. Starten
+    - `python3 visualSpice.py`
+
+oder `make init run`
 
 ### Build
 
-siehe _makefile_
+`make build` bzw. manuel, wie im [makefile](makefile#L32) mit pyinstaller
