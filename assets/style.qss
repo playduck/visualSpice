@@ -1,0 +1,112 @@
+/* --------------------------------- toolbar -------------------------------- */
+
+QToolBar {
+    padding: 5px;
+    background-color: palette(Dark);
+    /* border-radius: 5px; */
+}
+QToolBar::separator {
+    margin: 5px;
+}
+
+/* --------------------------------- buttons -------------------------------- */
+
+QPushButton {
+    border-radius: 2px;
+    icon-size: 20px;
+    padding: 6px;
+    margin: 2px;
+    color: palette(ButtonText);
+    background-color: palette(Button);
+}
+QPushButton:hover {
+    color: palette(HighlightedText);
+    background-color: palette(Dark);
+    border: 1px solid palette(Highlight);
+}
+QPushButton:pressed {
+    background-color: palette(Dark);
+}
+QPushButton:checked {
+    background-color: palette(Dark);
+    border: 2px solid palette(HighlightedText);
+}
+QPushButton:flat {
+    border: none;
+    background-color: transparent;
+    width: 10%;
+}
+QPushButton:flat:hover {
+    border: 1px solid palette(Highlight);
+}
+QPushButton:flat:focus {
+    outline: 0;
+}
+
+QPushButton:disabled,
+QPushButton:disabled:hover {
+    /* color: rgb(255, 0, 100); */
+    background-color: palette(Base);
+}
+
+/* ------------------------------- dockWidget ------------------------------- */
+
+QDockWidget::title {
+    background-color: palette(Dark);
+    margin: 0 10px;
+    margin-bottom: -15px;
+    margin-top: 10px;
+    padding: 0px;
+    border-radius: 2px;
+    text-align: center;
+}
+
+
+QDockWidget {
+    titlebar-close-icon: url(close.png);
+    titlebar-normal-icon: url(float.png);
+}
+
+QTabWidget QWidget,
+QDockWidget QWidget {
+    background-color: palette(Dark);
+    margin: 10px;
+    padding: 5px;
+    border-radius: 2px;
+}
+
+/* -------------------------------- tabWidget ------------------------------- */
+
+QTabWidget::pane {
+    border: none;
+    outline: 0;
+    padding: 0;
+    margin: 0;
+}
+
+QTabWidget,
+QTabWidget QWidget {
+    padding: 0;
+    margin: 0;
+}
+QTabWidget::tab-bar {
+    left: 5px;
+}
+
+QTabBar::tab {
+    background-color: palette(Window);
+    border: 2px solid transparent;
+    border-bottom-color: palette(Base);
+
+    min-width: 8ex;
+    padding: 2px;
+    /* margin: 0 4px; */
+}
+
+QTabBar::tab:selected, QTabBar::tab:hover {
+    border-bottom-color: palette(Highlight);
+}
+
+QTabBar::tab:selected {
+    border-bottom-color: palette(HighlightedText);
+}
