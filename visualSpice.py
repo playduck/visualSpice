@@ -11,6 +11,7 @@ import json
 
 import Config
 import PlotViewer
+import NodeScene
 
 import pyqtgraph as pg
 import pandas as pd
@@ -35,6 +36,7 @@ class visualSpiceWindow(QtWidgets.QMainWindow):
         geometry.moveCenter(center)
         self.move(geometry.topLeft())
 
+        # populate toolbar
         self.addNewSim = QtWidgets.QPushButton(QtGui.QIcon(Config.getResource("assets/add_sim.png")), "Simulation")
         self.addNewView = QtWidgets.QPushButton(QtGui.QIcon(Config.getResource("assets/add_plot.png")), "Plot")
         self.deleteSelected = QtWidgets.QPushButton(QtGui.QIcon(Config.getResource("assets/delete.png")), "Löschen")
@@ -55,6 +57,11 @@ class visualSpiceWindow(QtWidgets.QMainWindow):
         # add Plot Viewer
         self.plotViewer = PlotViewer.PlotViewer(self)
         self.plotDockWidget.setWidget(self.plotViewer.win)
+
+        # add nodeScene
+        self.mainNodeScene = NodeScene.NodeScene()
+
+        self.sceneTabWidget.addTab(self.mainNodeScene.scene, "Main")
 
         self.show()
 
