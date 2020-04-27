@@ -1,0 +1,70 @@
+{
+    "scene_width": 800,
+    "scene_height": 800,
+    "grid_size": 36,
+    "antialiasing": true,
+    "antialiasing_boost": true,
+    "smooth_pixmap": true,
+
+    "node_font": "Helvetica Neue",
+    "node_font_size": 16,
+    "attr_font": "Helvetica Neue",
+    "attr_font_size": 14,
+    "mouse_bounding_box": 80,
+
+    "node_width": 180,
+    "node_height": 25,
+    "node_radius": 2,
+    "node_border": 2,
+    "node_attr_height": 30,
+    "connection_width": 2,
+
+    "alternate_value": 20,
+    "bg_color": [40, 40,40, 0],
+    "grid_color": [50, 50, 50, 255],
+    "slot_border": [50, 50, 50, 255],
+    "non_connectable_color": [100, 100, 100, 255],
+    "connection_color": [240, 240, 240, 255],
+
+    "node_default": {
+        "bg": [130, 130, 130, 255],
+        "border": [50, 50, 50, 255],
+        "border_sel": [250, 250, 250, 255],
+        "text": [255, 255, 255, 255]
+    },
+
+    "attr_default": {
+        "bg": [160, 160, 160, 255],
+        "text": [220, 220, 220, 255],
+        "plug": [200, 200, 200, 255],
+        "socket": [200, 200, 200, 255]
+    },
+
+    "node_preset_1": {
+        "bg": [80, 80, 80, 255],
+        "border": [50, 50, 50, 255],
+        "border_sel": [100, 212, 240, 255],
+        "text": [230, 230, 230, 255]
+    },
+
+    "attr_preset_1": {
+        "bg": [60, 60, 60, 255],
+        "text": [220, 220, 220, 255],
+        "plug": [200, 200, 200, 255],
+        "socket": [200, 200, 200, 255]
+    },
+
+    "attr_preset_2":{
+        "bg": [85, 70, 202, 255],
+        "text": [220, 220, 220, 255],
+        "plug": [200, 200, 200, 255],
+        "socket": [200, 200, 200, 255]
+    },
+
+    "attr_preset_3":{
+        "bg": [160, 160, 160, 255],
+        "text": [220, 220, 220, 255],
+        "plug": [200, 200, 200, 255],
+        "socket": [200, 200, 200, 255]
+    }
+}

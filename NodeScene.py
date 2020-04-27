@@ -1,4 +1,4 @@
-# PlotViewer.py
+# NodeScene.py
 # by Robin Prillwitz
 # 24.4.2020
 #
@@ -6,10 +6,12 @@
 from PyQt5 import QtCore, QtWidgets
 from Nodz import nodz_main
 
+import Config
+
 class NodeScene(object):
     def __init__(self):
         self.scene = nodz_main.Nodz(None)
-        # self.scene.loadConfig(filePath='./default_config.json')
+        self.scene.loadConfig(filePath=Config.getResource("assets/nodz_config.json"))
         self.scene.initialize()
         self.scene.gridVisToggle = True
         self.scene.gridSnapToggle = False

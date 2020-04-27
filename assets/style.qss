@@ -1,3 +1,7 @@
+QWidget {
+    font-family: "Helvetica Neue";
+}
+
 /* --------------------------------- toolbar -------------------------------- */
 
 QToolBar {
@@ -108,5 +112,5 @@ QTabBar::tab:selected, QTabBar::tab:hover {
 }
 
 QTabBar::tab:selected {
-    border-bottom-color: palette(HighlightedText);
+    border-bottom-color: palette(Highlight);
 }

@@ -116,8 +116,8 @@ if __name__ == "__main__":
     gui.window = mw
 
     pallete = QtGui.QPalette()
-    pallete.setColor(QtGui.QPalette.Highlight, QtGui.QColor(255, 50, 200))
-    pallete.setColor(QtGui.QPalette.HighlightedText, QtGui.QColor(255, 50, 200))
+    pallete.setColor(QtGui.QPalette.Highlight, QtGui.QColor(100, 212, 240))
+    pallete.setColor(QtGui.QPalette.HighlightedText, QtGui.QColor(100, 212, 240))
     app.setPalette(pallete)
 
     # load custom styles
