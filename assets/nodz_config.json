@@ -1,6 +1,6 @@
 {
-    "scene_width": 800,
-    "scene_height": 800,
+    "scene_width": 8000,
+    "scene_height": 8000,
     "grid_size": 36,
     "antialiasing": true,
     "antialiasing_boost": true,
@@ -22,6 +22,7 @@
     "alternate_value": 20,
     "bg_color": [40, 40,40, 0],
     "grid_color": [50, 50, 50, 255],
+    "border_color": [120, 120, 120, 255],
     "slot_border": [50, 50, 50, 255],
     "non_connectable_color": [100, 100, 100, 255],
     "connection_color": [240, 240, 240, 255],
