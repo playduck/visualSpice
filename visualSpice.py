@@ -36,24 +36,6 @@ class visualSpiceWindow(QtWidgets.QMainWindow):
         geometry.moveCenter(center)
         self.move(geometry.topLeft())
 
-        # populate toolbar
-        self.addNewSim = QtWidgets.QPushButton(QtGui.QIcon(Config.getResource("assets/add_sim.png")), "Simulation")
-        self.addNewView = QtWidgets.QPushButton(QtGui.QIcon(Config.getResource("assets/add_plot.png")), "Plot")
-        self.deleteSelected = QtWidgets.QPushButton(QtGui.QIcon(Config.getResource("assets/delete.png")), "Löschen")
-        self.runSim = QtWidgets.QPushButton(QtGui.QIcon(Config.getResource("assets/start.png")), "Start")
-
-        self.toolBar.addWidget(self.addNewSim)
-        self.toolBar.addWidget(self.addNewView)
-        self.toolBar.addWidget(self.deleteSelected)
-        self.toolBar.addSeparator()
-
-        spacer = QtWidgets.QWidget()
-        spacer.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
-        self.toolBar.addWidget(spacer)
-        self.toolBar.addSeparator()
-
-        self.toolBar.addWidget(self.runSim)
-
         # add Plot Viewer
         self.plotViewer = PlotViewer.PlotViewer(self)
         self.plotDockWidget.setWidget(self.plotViewer.win)
@@ -63,7 +45,30 @@ class visualSpiceWindow(QtWidgets.QMainWindow):
         self.sceneTabWidget.addTab(self.mainNodeScene.scene, "Main")
         self.mainNodeScene.scene.signal_NodeSelected.connect(self.nodeSelected)
 
+        # populate toolbar
+        self.addNewSimBtn = QtWidgets.QPushButton(QtGui.QIcon(Config.getResource("assets/add_sim.png")), "Simulation")
+        self.addNewViewBtn = QtWidgets.QPushButton(QtGui.QIcon(Config.getResource("assets/add_plot.png")), "Plot")
+        self.deleteSelectedBtn = QtWidgets.QPushButton(QtGui.QIcon(Config.getResource("assets/delete.png")), "Löschen")
+
+        self.focusBtn = QtWidgets.QPushButton(QtGui.QIcon(Config.getResource("assets/focus.png")), "Focus")
+        self.focusBtn.clicked.connect(lambda: self.sceneTabWidget.currentWidget()._focus() )
+
+        self.runSimBtn = QtWidgets.QPushButton(QtGui.QIcon(Config.getResource("assets/start.png")), "Start")
+
+        self.toolBar.addWidget(self.addNewSimBtn)
+        self.toolBar.addWidget(self.addNewViewBtn)
+        self.toolBar.addWidget(self.deleteSelectedBtn)
+        self.toolBar.addSeparator()
+        self.toolBar.addWidget(self.focusBtn)
+
+        spacer = QtWidgets.QWidget()
+        spacer.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
+        self.toolBar.addWidget(spacer)
+        self.toolBar.addSeparator()
+        self.toolBar.addWidget(self.runSimBtn)
+
         self.show()
+        self.mainNodeScene.scene._focus()
 
     def nodeSelected(self, selectedNodes):
         print('node selected : ', selectedNodes)
