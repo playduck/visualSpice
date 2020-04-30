@@ -24,3 +24,4 @@ class PlotViewer(object):
 
         self.plt.showGrid(True, True, 0.6)
         self.plt.vb.setLimits(minXRange=0.0001, minYRange=0.0001)
+        # self.plt.vb.setAspectLocked(lock=True, ratio=1)
