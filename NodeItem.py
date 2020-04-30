@@ -50,7 +50,7 @@ class PlotNode(AbstractNodeItem):
         super().__init__(name)
 
         self.plotViewer = plotViewer
-        self.plot = pg.PlotDataItem()
+        self.plot = pg.PlotDataItem(name=name)
         self.color = QtGui.QColor(100, 212, 240)
 
         self.plotViewer.plt.addItem(self.plot)

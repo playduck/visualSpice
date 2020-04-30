@@ -18,6 +18,7 @@ class PlotViewer(object):
 
         self.plt.setLabel("left", units=units)
         self.plt.setLabel("bottom", units="s")
+        self.plt.addLegend(offset=(2,2))
 
         self.plt.hideButtons()
         self.plt.autoRange(padding=0.2)

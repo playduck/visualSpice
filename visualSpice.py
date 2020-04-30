@@ -209,6 +209,7 @@ class visualSpiceWindow(QtWidgets.QMainWindow):
 
         # run fc
         fc.process()
+        self.plotViewer.plt.vb.autoRange()
 
         # cleanup
         fc.clear()
