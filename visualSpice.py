@@ -206,7 +206,9 @@ class visualSpiceWindow(QtWidgets.QMainWindow):
         self._refocus()
 
     def run(self):
+        progress = pg.ProgressDialog("simulieren...")
         evaluated = self.mainNodeScene.evaluateGraph()
+        progress += 10
 
         fc = fl.Flowchart()
         # add nodes and build terminals
@@ -216,6 +218,7 @@ class visualSpiceWindow(QtWidgets.QMainWindow):
                 node.userData.addInput(socket)
             for plug in node.plugs:
                 node.userData.addOutput(plug)
+        progress += 10
 
         # build connections
         for connection in evaluated:
@@ -223,6 +226,7 @@ class visualSpiceWindow(QtWidgets.QMainWindow):
                 connection[0][0].userData.terminals[connection[0][2]],
                 connection[1][0].userData.terminals[connection[1][2]]
             )
+        progress += 10
 
         # # debug pg fc interface
         # dialog = QtWidgets.QDialog()
@@ -234,12 +238,16 @@ class visualSpiceWindow(QtWidgets.QMainWindow):
 
         # run fc
         fc.process()
+        progress += 10
+
         self.plotViewer.plt.vb.autoRange()
+        progress += 10
 
         # cleanup
         fc.clear()
         fc.close()
         del fc
+        progress.setValue(100)
 
 
 if __name__ == "__main__":
