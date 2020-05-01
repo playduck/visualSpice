@@ -79,9 +79,9 @@ class PlotNode(AbstractNodeItem):
 
         self.plot.setData([0,0.001], [0,0])
         if "x-Achse" in kwds and "y-Achse" in kwds:
-            self.plot.setData(kwds["x-Achse"], kwds["y-Achse"])
+            self.plot.setData(x=kwds["x-Achse"], y=kwds["y-Achse"])
         elif "y-Achse" in kwds:
-            self.plot.setData(kwds["y-Achse"])
+            self.plot.setData(y=kwds["y-Achse"])
 
 
 class DataNode(AbstractNodeItem):
