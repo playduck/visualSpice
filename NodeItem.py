@@ -69,6 +69,8 @@ class PlotNode(AbstractNodeItem):
             self.plot.setPen(pg.mkPen(color=self.color, width=2))
 
     def delete(self):
+        self.plotViewer.plt.vb.removeItem(self.plot)
+        self.plotViewer.plt.legend.removeItem(self.name())
         self.plotViewer.plt.removeItem(self.plot)
         return super().delete()
 
