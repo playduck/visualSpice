@@ -67,6 +67,8 @@ class visualSpiceWindow(QtWidgets.QMainWindow):
         self.focusBtn = QtWidgets.QPushButton(QtGui.QIcon(Config.getResource("assets/focus.png")), "Focus")
         self.focusBtn.clicked.connect(lambda: self.sceneTabWidget.currentWidget()._focus() )
 
+        self.settingsBtn = QtWidgets.QPushButton(QtGui.QIcon(Config.getResource("assets/settings.png")), "Einstellungen")
+
         self.runSimBtn = QtWidgets.QPushButton(QtGui.QIcon(Config.getResource("assets/start.png")), "Start")
         self.runSimBtn.clicked.connect(self.run)
 
@@ -76,6 +78,7 @@ class visualSpiceWindow(QtWidgets.QMainWindow):
         self.toolBar.addWidget(self.deleteSelectedBtn)
         self.toolBar.addSeparator()
         self.toolBar.addWidget(self.focusBtn)
+        self.toolBar.addWidget(self.settingsBtn)
 
         spacer = QtWidgets.QWidget()
         spacer.setSizePolicy(QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
