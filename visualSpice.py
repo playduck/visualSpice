@@ -110,8 +110,30 @@ class visualSpiceWindow(QtWidgets.QMainWindow):
         for deletedNode in deletedNodes:
             deletedNode.userData.delete()
 
+    def _getColor(self):
+        i = len(self._getActiveScene().scene().nodes)
+        if i < len(Config.COLORS):
+            color = Config.COLORS[i].copy()
+        else:
+            color = Config.COLORS[i % len(Config.COLORS)].copy()
+            color[0] = (color[0] + 10 + 10 * i) % 360
+
+        qc = QtGui.QColor()
+        print(color)
+        qc.setHsv(color[0], color[1] * 2.55, color[2] * 2.55)
+        return qc
+
     def deleteSelected(self):
         self._getActiveScene()._deleteSelectedNodes()
+
+    def getFreeName(self, name, count=0):
+        activeScene = self._getActiveScene()
+
+        if name + " " + str(count) in activeScene.scene().nodes.keys():
+            return self.getFreeName(name, count+1)
+        else:
+            return name + " " + str(count)
+
 
     def addNewSim(self):
         simFile = "./test"
@@ -136,7 +158,7 @@ class visualSpiceWindow(QtWidgets.QMainWindow):
     def addNewPlot(self):
         activeScene = self._getActiveScene()
 
-        userData = NodeItem.PlotNode("plotViewer", self.plotViewer)
+        userData = NodeItem.PlotNode(self.getFreeName("plotViewer"), self.plotViewer, self._getColor())
 
         position = activeScene.mapToScene(self.sceneTabWidget.width() / 2, self.sceneTabWidget.height() / 2)
 

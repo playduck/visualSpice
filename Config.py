@@ -13,3 +13,9 @@ def getResource(path):
         root = Path()
 
     return str(root / path)
+
+COLORS = [
+    [192, 58, 94],
+    [312, 58, 94],
+    [72, 58, 94]
+]

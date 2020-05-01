@@ -46,12 +46,13 @@ class SimulationNode(AbstractNodeItem):
 
 
 class PlotNode(AbstractNodeItem):
-    def __init__(self, name, plotViewer):
+    def __init__(self, name, plotViewer, color=None):
         super().__init__(name)
 
         self.plotViewer = plotViewer
-        self.plot = pg.PlotDataItem(name=name)
-        self.color = QtGui.QColor(100, 212, 240)
+        self.plot = pg.PlotDataItem(name=name, clipToView=True)
+
+        self.color = color
 
         self.plotViewer.plt.addItem(self.plot)
 
