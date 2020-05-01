@@ -142,11 +142,11 @@ class visualSpiceWindow(QtWidgets.QMainWindow):
         simFile = "./test"
         activeScene = self._getActiveScene()
 
-        userData = NodeItem.SimulationNode(os.path.basename(simFile), simFile)
+        userData = NodeItem.SimulationNode(self.getFreeName(os.path.basename(simFile)), simFile)
 
         position = activeScene.mapToScene(self.sceneTabWidget.width() / 2, self.sceneTabWidget.height() / 2)
 
-        node = activeScene.createNode(name='test', preset='node_preset_1', position=position, userData=userData)
+        node = activeScene.createNode(name=userData.name(), preset='node_preset_1', position=position, userData=userData)
         activeScene.createAttribute(node=node, name='Battr1', index=-1, preset='attr_preset_1',
                             plug=True, socket=False, dataType=str)
         activeScene.createAttribute(node=node, name='Battr2', index=-1, preset='attr_preset_1',
@@ -165,7 +165,7 @@ class visualSpiceWindow(QtWidgets.QMainWindow):
 
         position = activeScene.mapToScene(self.sceneTabWidget.width() / 2, self.sceneTabWidget.height() / 2)
 
-        node = activeScene.createNode(name='plotViewer', preset='node_preset_1', position=position, userData=userData)
+        node = activeScene.createNode(name=userData.name(), preset='node_preset_1', position=position, userData=userData)
         activeScene.createAttribute(node=node, name='x-Achse', index=-1, preset='attr_preset_1',
                             plug=False, socket=True, dataType=int)
         activeScene.createAttribute(node=node, name='y-Achse', index=-1, preset='attr_preset_1',
@@ -179,9 +179,9 @@ class visualSpiceWindow(QtWidgets.QMainWindow):
                 "Wave Datei (*.wav);;CSV Datei (*.csv);;Alle Dateinen (*)")
 
         if filename:
-            userData = NodeItem.DataNode(os.path.basename(filename))
+            userData = NodeItem.DataNode(self.getFreeName(os.path.basename(filename)))
             position = activeScene.mapToScene(self.sceneTabWidget.width() / 2, self.sceneTabWidget.height() / 2)
-            node = activeScene.createNode(name=os.path.basename(filename), preset='node_preset_1', position=position, userData=userData)
+            node = activeScene.createNode(name=userData.name(), preset='node_preset_1', position=position, userData=userData)
 
             if ".wav" in filetype:
                 try:
