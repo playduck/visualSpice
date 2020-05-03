@@ -6,6 +6,7 @@ __pycache__/*
 /source/*
 /External Libraries/*
 /Nodz
+/temp
 
 # Build
 /bin
