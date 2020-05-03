@@ -3,6 +3,7 @@
 # 27.4.2020
 #
 
+import os
 import sys
 from pathlib import Path
 
@@ -19,3 +20,5 @@ COLORS = [
     [312, 58, 94],
     [72, 58, 94]
 ]
+
+TEMP_DIR = os.path.abspath("./temp") + "/"
