@@ -19,7 +19,6 @@ from pyqtgraph import flowchart as fl
 
 import pandas as pd
 import numpy as np
-from scipy.io import wavfile
 from PyQt5 import QtGui, QtCore, QtWidgets, uic
 import qtmodern.styles
 import qtmodern.windows
@@ -28,6 +27,8 @@ import qtmodern.windows
 class visualSpiceWindow(QtWidgets.QMainWindow):
     def __init__(self):
         super(visualSpiceWindow, self).__init__()
+        # generate TEMP DIR for simulations
+        Path(Config.TEMP_DIR).mkdir(parents=True, exist_ok=True)
 
         uic.loadUi(Config.getResource("ui/main.ui"), self)
         self.setWindowTitle("visualSpice")
@@ -87,6 +88,8 @@ class visualSpiceWindow(QtWidgets.QMainWindow):
         self.toolBar.addWidget(self.runSimBtn)
 
         self.show()
+
+        self.addNewSim() # TEMP ONLY TODO
         # self.mainNodeScene._focus()
 
     def _getActiveScene(self):
@@ -126,6 +129,14 @@ class visualSpiceWindow(QtWidgets.QMainWindow):
         qc.setHsv(color[0], color[1] * 2.55, color[2] * 2.55)
         return qc
 
+    def _createAttribute(self, nodeName, params):
+        activeScene = self._getActiveScene()
+        for node in activeScene.scene().nodes:
+            if node== nodeName:
+                activeScene.createAttribute(node=activeScene.scene().nodes[node],
+                    name=params.get("name"), index=params.get("index"), preset=params.get("preset"),
+                    plug=params.get("plug"), socket=params.get("socket"), dataType=params.get("dataType"))
+
     def deleteSelected(self):
         self._getActiveScene()._deleteSelectedNodes()
 
@@ -139,22 +150,16 @@ class visualSpiceWindow(QtWidgets.QMainWindow):
 
 
     def addNewSim(self):
-        simFile = "./test"
+        simFile = "./testData/rc.cir"
         activeScene = self._getActiveScene()
 
         userData = NodeItem.SimulationNode(self.getFreeName(os.path.basename(simFile)), simFile)
+        userData.createAttributeSig.connect(self._createAttribute)
 
         position = activeScene.mapToScene(self.sceneTabWidget.width() / 2, self.sceneTabWidget.height() / 2)
-
         node = activeScene.createNode(name=userData.name(), preset='node_preset_1', position=position, userData=userData)
-        activeScene.createAttribute(node=node, name='Battr1', index=-1, preset='attr_preset_1',
-                            plug=True, socket=False, dataType=str)
-        activeScene.createAttribute(node=node, name='Battr2', index=-1, preset='attr_preset_1',
-                            plug=True, socket=True, dataType=int)
-        activeScene.createAttribute(node=node, name='Battr3', index=-1, preset='attr_preset_2',
-                            plug=True, socket=True, dataType=int)
-        activeScene.createAttribute(node=node, name='Battr4', index=-1, preset='attr_preset_3',
-                            plug=True, socket=False, dataType=int, plugMaxConnections=1, socketMaxConnections=-1)
+
+        userData.readData()
 
         self._refocus()
 
@@ -164,8 +169,9 @@ class visualSpiceWindow(QtWidgets.QMainWindow):
         userData = NodeItem.PlotNode(self.getFreeName("plotViewer"), self.plotViewer, self._getColor())
 
         position = activeScene.mapToScene(self.sceneTabWidget.width() / 2, self.sceneTabWidget.height() / 2)
-
         node = activeScene.createNode(name=userData.name(), preset='node_preset_1', position=position, userData=userData)
+
+        # no need to use attrribute createion via signal since these attributes are always static
         activeScene.createAttribute(node=node, name='x-Achse', index=-1, preset='attr_preset_1',
                             plug=False, socket=True, dataType=int)
         activeScene.createAttribute(node=node, name='y-Achse', index=-1, preset='attr_preset_1',
@@ -179,29 +185,13 @@ class visualSpiceWindow(QtWidgets.QMainWindow):
                 "Wave Datei (*.wav);;CSV Datei (*.csv);;Alle Dateinen (*)")
 
         if filename:
-            userData = NodeItem.DataNode(self.getFreeName(os.path.basename(filename)))
+            userData = NodeItem.DataNode(self.getFreeName(os.path.basename(filename)), filename)
+            userData.createAttributeSig.connect(self._createAttribute)
+
             position = activeScene.mapToScene(self.sceneTabWidget.width() / 2, self.sceneTabWidget.height() / 2)
             node = activeScene.createNode(name=userData.name(), preset='node_preset_1', position=position, userData=userData)
 
-            if ".wav" in filetype:
-                try:
-                    fs, data = wavfile.read(filename)
-                except:
-                    return
-
-                userData.data["Zeit"] = np.linspace(0, len(data) / fs, len(data))
-                activeScene.createAttribute(node=node, name="Zeit",
-                    index=-1, preset='attr_preset_1', plug=True, socket=False, dataType=int)
-
-                if len(data.shape) > 1:
-                    length = data.shape[1]
-                else:
-                    length = 1
-
-                for i in range(0, length):
-                    userData.data["Kanal "+str(i)] = data
-                    activeScene.createAttribute(node=node, name="Kanal "+ str(i),
-                        index=-1, preset='attr_preset_2', plug=True, socket=False, dataType=int)
+            userData.parseFile()
 
         self._refocus()
 
@@ -215,16 +205,16 @@ class visualSpiceWindow(QtWidgets.QMainWindow):
         for node in self.mainNodeScene.scene().nodes.values():
             fc.addNode(node.userData, node.userData.name())
             for socket in node.sockets:
-                node.userData.addInput(socket)
+                node.userData.addInput(socket + "/S/")
             for plug in node.plugs:
-                node.userData.addOutput(plug)
+                node.userData.addOutput(plug + "/P/")
         progress += 10
 
         # build connections
         for connection in evaluated:
             fc.connectTerminals(
-                connection[0][0].userData.terminals[connection[0][2]],
-                connection[1][0].userData.terminals[connection[1][2]]
+                connection[0][0].userData.terminals[connection[0][2]+"/P/"],
+                connection[1][0].userData.terminals[connection[1][2]+"/S/"]
             )
         progress += 10
 
@@ -237,17 +227,26 @@ class visualSpiceWindow(QtWidgets.QMainWindow):
         # dialog.exec_()
 
         # run fc
-        fc.process()
+        try:
+            fc.process()
+        except Exception as e:
+            print(e)
+
         progress += 10
 
         self.plotViewer.plt.vb.autoRange()
         progress += 10
 
+        # remove node terminals, cannot use for loop, since terminals dict will be mutated in iterations
+        for node in self.mainNodeScene.scene().nodes.values():
+            while len(node.userData.terminals) > 1:
+                node.userData.removeTerminal(node.userData.terminals[next(iter(node.userData.terminals))])
+
         # cleanup
+        progress.setValue(100)
         fc.clear()
         fc.close()
         del fc
-        progress.setValue(100)
 
 
 if __name__ == "__main__":

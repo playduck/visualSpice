@@ -6,11 +6,19 @@
 from PyQt5 import QtCore, QtGui, QtWidgets, uic
 from pyqtgraph import flowchart as fc
 import pyqtgraph as pg
+import numpy as np
+from scipy.io import wavfile
+import pandas as pd
+
 from Nodz import nodz_main
 
 import Config
+import Interface
 
 class AbstractNodeItem(fc.Node):
+
+    createAttributeSig = QtCore.pyqtSignal("QString", dict)
+
     def __init__(self, name):
         fc.Node.__init__(self, name)
         self.optionWidget = QtWidgets.QWidget()
@@ -20,9 +28,9 @@ class AbstractNodeItem(fc.Node):
 
     def process(self, **kwds):
         # kwds will have one keyword argument per input terminal.
+        kwds = { k.replace('/S/', ''): v for k, v in kwds.items() }
         print("PROCESS", self.name(), kwds)
-        # print(self.terminals)
-        return {'outputTerminalName': [1]}
+        return kwds
 
     def delete(self):
         del self
@@ -31,8 +39,54 @@ class SimulationNode(AbstractNodeItem):
     def __init__(self, name, simFile):
         super().__init__(name)
         self._initSettings()
-
+        self.interface = Interface.Interface(simFile)
         self.simFile = simFile
+
+        t = np.linspace(0, 0.1, 5)
+        self.interface.prepareSimulation(
+            time=t,
+            value=t
+        )
+        self.interface.runSim()
+
+    def process(self, **kwds):
+        kwds = super().process(**kwds)
+        if not kwds.get("time") or not kwds.get("v(input)"):
+            raise Exception(self.name(), "unconnected inputs")
+
+        self.interface.prepareSimulation(time=kwds.get("time"), value=kwds.get("v(input)")) # TODO automate
+        self.interface.runSim()
+        self.readData()
+
+        return { k+"/P/": v for k, v in self.data.items() }
+
+    def readData(self):
+        data = self.interface.readRaw()
+
+        self.data = data
+
+        for var in self.data.keys():
+            print(len(self.data[var]))
+            if "IN" in var.upper():
+                socket = True
+                plug = True
+            elif var.upper() == "TIME":
+                socket = True
+                plug = True
+            else:
+                socket = False
+                plug = True
+
+            if "V(" in var.upper():
+                preset = "attr_preset_2"
+            elif "I(" in var.upper():
+                preset = "attr_preset_3"
+            else:
+                preset = "attr_preset_1"
+
+            self.createAttributeSig.emit( self.name(),
+                {"name":var, "index":-1, "preset":preset, "plug":plug, "socket":socket, "dataType":int}
+            )
 
     def _initSettings(self):
         optionLayout = QtWidgets.QFormLayout()
@@ -75,21 +129,51 @@ class PlotNode(AbstractNodeItem):
         return super().delete()
 
     def process(self, **kwds):
-        super().process(**kwds)
+        kwds = super().process(**kwds)
 
         self.plot.setData([0,0.001], [0,0])
         if "x-Achse" in kwds and "y-Achse" in kwds:
             self.plot.setData(x=kwds["x-Achse"], y=kwds["y-Achse"])
         elif "y-Achse" in kwds:
+            print(kwds["y-Achse"])
             self.plot.setData(y=kwds["y-Achse"])
 
 
 class DataNode(AbstractNodeItem):
-    def __init__(self, name):
+    def __init__(self, name, filename):
         super().__init__(name)
+        self.filename = filename
         self.data = dict()
 
+    def parseFile(self):
+        if ".wav" in self.filename:
+            try:
+                fs, data = wavfile.read(self.filename)
+            except:
+                return
+
+            self.data["Zeit"] = np.linspace(0, len(data) / fs, len(data))
+            self.createAttributeSig.emit(
+                self.name(),
+                {"name":"Zeit", "index":-1, "preset":"attr_preset_1", "plug":True, "socket":False, "dataType":int}
+            )
+
+            if len(data.shape) > 1:
+                length = data.shape[1]
+            else:
+                length = 1
+
+            for i in range(0, length):
+                self.data["Kanal "+str(i)] = data
+
+                self.createAttributeSig.emit(
+                    self.name(),
+                    {"name":"Kanal "+ str(i), "index":-1, "preset":"attr_preset_2", "plug":True, "socket":False, "dataType":int}
+                )
+            print(self.data)
+        else:
+            print("unknown file format")
+
     def process(self, **kwds):
-        super().process(**kwds)
-        # print("DATA", self.data)
-        return self.data
+        kwds = super().process(**kwds)
+        return { k+"/P/": v for k, v in self.data.items() }
