@@ -1,4 +1,5 @@
 altgraph==0.17
+ltspice==0.4.1
 macholib==1.14
 numpy==1.18.2
 pandas==1.0.3
