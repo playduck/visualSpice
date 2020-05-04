@@ -14,6 +14,7 @@ from Nodz import nodz_main
 
 import Config
 import Interface
+import Graph
 
 class AbstractNodeItem(fc.Node):
 
@@ -29,7 +30,7 @@ class AbstractNodeItem(fc.Node):
     def process(self, **kwds):
         # kwds will have one keyword argument per input terminal.
         kwds = { k.replace('/S/', ''): v for k, v in kwds.items() }
-        print("PROCESS", self.name(), kwds)
+        print("PROCESS", self.name(), kwds.keys())
         return kwds
 
     def delete(self):
@@ -51,7 +52,7 @@ class SimulationNode(AbstractNodeItem):
 
     def process(self, **kwds):
         kwds = super().process(**kwds)
-        if not kwds.get("time") or not kwds.get("v(input)"):
+        if not "time" in kwds or not "v(input)" in kwds:
             raise Exception(self.name(), "unconnected inputs")
 
         self.interface.prepareSimulation(time=kwds.get("time"), value=kwds.get("v(input)")) # TODO automate
@@ -104,7 +105,7 @@ class PlotNode(AbstractNodeItem):
         super().__init__(name)
 
         self.plotViewer = plotViewer
-        self.plot = pg.PlotDataItem(name=name, clipToView=True)
+        self.plot = Graph.Graph(name=name, clipToView=True,  downsampleMethod="subsample")
 
         self.color = color
 
@@ -131,12 +132,15 @@ class PlotNode(AbstractNodeItem):
     def process(self, **kwds):
         kwds = super().process(**kwds)
 
-        self.plot.setData([0,0.001], [0,0])
         if "x-Achse" in kwds and "y-Achse" in kwds:
-            self.plot.setData(x=kwds["x-Achse"], y=kwds["y-Achse"])
+            self.plot.setDownsampleData(
+                x=np.array(kwds["x-Achse"]),
+                y=np.array(kwds["y-Achse"])
+            )
         elif "y-Achse" in kwds:
-            print(kwds["y-Achse"])
-            self.plot.setData(y=kwds["y-Achse"])
+            self.plot.setDownsampleData(y=kwds["y-Achse"])
+        else:
+            self.plot.setDownsampleData(x=[0,0.001], y=[0,0])
 
 
 class DataNode(AbstractNodeItem):
