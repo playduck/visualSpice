@@ -1,5 +1,5 @@
 .title Basic low pass filter circuit
-.model filesrc filesource (file="__INPUT_FILE__" amploffset=[0] amplscale=[1]
+.model filesrc filesource (file="__INPUT_FILE__" amploffset=[0] amplscale=[0.0005]
 +                           timeoffset=0 timescale=1
 +                           timerelative=false amplstep=false)
 
@@ -7,6 +7,7 @@ a1 %v([input]) filesrc
 
 R1 input 1 1k
 L1 1 2 2.2m
+
 C1 2 0 24e-6
 R2 2 0 1k
 
