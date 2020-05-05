@@ -36,7 +36,6 @@ class Interface(object):
             values.to_csv(Config.TEMP_DIR+"input.m", sep=" ", header=True, index=False, float_format="%.6e")
 
             self._replaceInFile("__INPUT_FILE__", Config.TEMP_DIR+"input.m")
-            self._replaceInFile("__OUTPUT_FILE__", Config.TEMP_DIR+"output.m")
 
     def runSim(self):
         if self.simulator == "LTSpice":
@@ -55,7 +54,6 @@ class Interface(object):
             print()
 
             self._replaceInFile(Config.TEMP_DIR+"input.m", "__INPUT_FILE__")
-            self._replaceInFile(Config.TEMP_DIR+"output.m", "__OUTPUT_FILE__")
 
             with open(Config.TEMP_DIR + self.filename + ".log" , 'r+') as f:
                 for line in f:

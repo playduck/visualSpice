@@ -88,8 +88,6 @@ class visualSpiceWindow(QtWidgets.QMainWindow):
         self.toolBar.addWidget(self.runSimBtn)
 
         self.show()
-
-        self.addNewSim() # TEMP ONLY TODO
         # self.mainNodeScene._focus()
 
     def _getActiveScene(self):
@@ -150,18 +148,20 @@ class visualSpiceWindow(QtWidgets.QMainWindow):
 
 
     def addNewSim(self):
-        simFile = "./testData/rc.cir"
         activeScene = self._getActiveScene()
+        filename, filetype = QtWidgets.QFileDialog.getOpenFileName(self, "Datei Hinzufügen", "",
+                "circuit (*.cir);;Alle Dateinen (*)")
 
-        userData = NodeItem.SimulationNode(self.getFreeName(os.path.basename(simFile)), simFile)
-        userData.createAttributeSig.connect(self._createAttribute)
+        if filename:
+            userData = NodeItem.SimulationNode(self.getFreeName(os.path.basename(filename)), filename)
+            userData.createAttributeSig.connect(self._createAttribute)
 
-        position = activeScene.mapToScene(self.sceneTabWidget.width() / 2, self.sceneTabWidget.height() / 2)
-        node = activeScene.createNode(name=userData.name(), preset='node_preset_1', position=position, userData=userData)
+            position = activeScene.mapToScene(self.sceneTabWidget.width() / 2, self.sceneTabWidget.height() / 2)
+            node = activeScene.createNode(name=userData.name(), preset='node_preset_1', position=position, userData=userData)
 
-        userData.readData()
+            userData.readData()
 
-        self._refocus()
+            self._refocus()
 
     def addNewPlot(self):
         activeScene = self._getActiveScene()
