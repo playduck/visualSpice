@@ -15,13 +15,11 @@ import ltspice
 import Config
 
 class Interface(object):
-    def __init__(self, cirFilename, simulator="ngspice"):
+    def __init__(self, cirFilename):
         super().__init__()
 
         self.simFile = cirFilename
         self.filename = os.path.basename(os.path.splitext(cirFilename)[0])
-
-        self.simulator = simulator
 
     def _replaceInFile(self, find, replace):
         for i, line in enumerate(fileinput.input(self.simFile, inplace=1)):
@@ -30,17 +28,16 @@ class Interface(object):
     def prepareSimulation(self, time=None, value=None):
         values = pd.DataFrame({"time": time, "value": value})
 
-        if self.simulator == "LTSpice":
+        if Config.simulator == "LTSpice":
             pass
-        elif self.simulator == "ngspice":
+        elif Config.simulator == "ngspice":
             values.to_csv(Config.TEMP_DIR+"input.m", sep=" ", header=True, index=False, float_format="%.6e")
-
             self._replaceInFile("__INPUT_FILE__", Config.TEMP_DIR+"input.m")
 
     def runSim(self):
-        if self.simulator == "LTSpice":
+        if Config.simulator == "LTSpice":
             pass # TODO
-        elif self.simulator == "ngspice":
+        elif Config.simulator == "ngspice":
             process = "ngspice"
 
             out = subprocess.run([
@@ -50,37 +47,35 @@ class Interface(object):
                 "-b -a", self.simFile
             ])
 
-            print("OUT", out)
-            print()
+            # print("OUT", out)
+            # print()
 
             self._replaceInFile(Config.TEMP_DIR+"input.m", "__INPUT_FILE__")
 
+            # parse log
             with open(Config.TEMP_DIR + self.filename + ".log" , 'r+') as f:
                 for line in f:
                     if "run simulation(s) aborted" in line or "cannot open file" in line or "error" in line:
                         print("Simulation failed")
-                        return -1
-                else:
-                    return 1
+                        raise Exception("Simulation Failed")
 
     def readRaw(self):
-        if self.simulator == "LTSpice":
+        if Config.simulator == "LTSpice":
             data = ltspice.Ltspice(self.filename)
             data.parse()
 
             return data
 
-        elif self.simulator == "ngspice_wrdata":
+        elif Config.simulator == "ngspice_wrdata":
             read = pd.read_csv(Config.TEMP_DIR+"output.m", delimiter="\s+")
 
             d = dict()
             for col in read.columns:
                 d[col] = np.array(read[col], dtype=np.float64)
-            print(d)
 
             return d
 
-        elif self.simulator == "ngspice":
+        elif Config.simulator == "ngspice":
             # shameless rip from
             # https://gist.github.com/snmishra/27dcc624b639c2626137
 
