@@ -6,15 +6,12 @@
 .model ads1 sidiode(Roff=1000 Ron=0.7 Rrev=0.2 Vfwd=1
 +       Vrev=10 Revepsilon=0.2 Epsilon=0.2 Ilimit=7 Revilimit=15)
 
-a1 %vd([input, b]) filesrc
+a1 %vd([in, ref]) filesrc
 
-ad1 input out ads1
-ad2 0 input ads1
-ad3 0 b ads1
-ad4 b out ads1
-
-R1 out 0 10k
-C1 out 0 100e-6
+ad1 in out ads1
+ad2 0 in ads1
+ad3 0 ref ads1
+ad4 ref out ads1
 
 .tran 100u 5
 .save all

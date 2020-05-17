@@ -1,0 +1,13 @@
+.title Basic low pass filter circuit
+.model filesrc filesource (file="__INPUT_FILE__" amploffset=[0] amplscale=[0.0005]
++                           timeoffset=0 timescale=1
++                           timerelative=false amplstep=false)
+
+a1 %v([in]) filesrc
+
+R1 in 1 1k
+C1 1 0 24e-6
+
+.tran 100u 5
+.save all
+.end
