@@ -10,6 +10,10 @@ import numpy as np
 from scipy.io import wavfile
 import pandas as pd
 
+import fileinput
+import os
+import re
+
 from Nodz import nodz_main
 
 import Config
@@ -30,11 +34,12 @@ class AbstractNodeItem(fc.Node):
     def process(self, **kwds):
         # kwds will have one keyword argument per input terminal.
         kwds = { k.replace('/S/', ''): v for k, v in kwds.items() }
-        print("PROCESS", self.name(), kwds.keys())
+        print("PROCESS", self.name(), kwds)
         return kwds
 
     def delete(self):
         del self
+
 
 class SimulationNode(AbstractNodeItem):
     def __init__(self, name, simFile):
@@ -52,14 +57,74 @@ class SimulationNode(AbstractNodeItem):
 
     def process(self, **kwds):
         kwds = super().process(**kwds)
-        if not "time" in kwds or not "v(input)" in kwds:
-            raise Exception(self.name(), "unconnected inputs")
+        name = self.name().replace(" ", "_").replace(".","_")
 
-        self.interface.prepareSimulation(time=kwds.get("time"), value=kwds.get("v(input)")) # TODO automate
-        self.interface.runSim()
-        self.readData()
+        parsed_models = list()
+        nets = list()
 
-        return { k+"/P/": v for k, v in self.data.items() }
+        fobj = open(self.simFile, "r")
+        text = fobj.read()
+        m = re.findall("(^(\.model) (\S*) (.*)(\\n\+.*)*)", text, re.MULTILINE)
+        if m is not None:
+            parsed_models.append(m)
+
+        for line in text.splitlines():
+            n = re.search("^([A-Z|a-z]+[0-9])\s([a-zA-Z0-9|_]+)\s([a-zA-Z0-9|_]+)\s(.*)$", line, re.M)
+            if n is not None:
+                nets.append(n.groups())
+
+        models = list()
+        for m in parsed_models[0]:
+            if "filesrc" not in m[2]:
+                new_name = name+"_"+m[2]
+                models.append({
+                    "name": m[2],
+                    "new_name": new_name,
+                    "body": m[0].replace(m[2], new_name, 1)
+                })
+
+        net_names = dict()
+        template = ""
+        # replace names with unique names or connected ones
+        for component in nets:
+            cname = "{0}_{1}".format(component[0], name)
+
+            cfrom = "0"
+            if "v("+component[1]+")" in kwds:
+                cfrom = kwds.get("v("+component[1]+")")
+            elif component[1] != "0":
+                cfrom = "{0}_{1}".format(component[1], name)
+
+            cto = "0"
+            if "v("+component[2]+")" in kwds:
+                cto = kwds.get("v("+component[2]+")")
+            elif component[2] != "0":
+                cto = "{0}_{1}".format(component[2], name)
+
+            val = component[3]
+            for model in models:
+                if component[3] == model["name"]:
+                    val =  model["new_name"]
+
+            template += "{0} {1} {2} {3}\n".format(cname, cfrom, cto, val)
+
+            if component[1] != "0":
+                net_names["v("+component[1]+")"] = cfrom
+            if component[2] != "0":
+                net_names["v("+component[2]+")"] = cto
+
+        insertIntoTemplate(template, "nets")
+        for model in models:
+            insertIntoTemplate(model["body"], "models")
+
+        # don't know why, but it fails doing it otherwise
+        new_names = dict()
+        for k in net_names.keys():
+            new_names[k + "/P/"] = net_names.get(k)
+
+        print("net_names\n", net_names)
+
+        return new_names
 
     def readData(self):
         data = self.interface.readRaw()
@@ -68,25 +133,19 @@ class SimulationNode(AbstractNodeItem):
 
         for var in self.data.keys():
             print(len(self.data[var]))
-            if "IN" in var.upper():
-                socket = True
-                plug = True
-            elif var.upper() == "TIME":
-                socket = True
-                plug = True
-            else:
-                socket = False
-                plug = True
 
-            if "V(" in var.upper():
+            if "TIME" in var.upper():
+                continue
+            elif "V(" in var.upper():
                 preset = "attr_preset_2"
             elif "I(" in var.upper():
                 preset = "attr_preset_3"
+                continue # TODO?
             else:
                 preset = "attr_preset_1"
 
             self.createAttributeSig.emit( self.name(),
-                {"name":var, "index":-1, "preset":preset, "plug":plug, "socket":socket, "dataType":int}
+                {"name":var, "index":-1, "preset":preset, "plug":True, "socket":True, "dataType":int}
             )
 
     def _initSettings(self):
@@ -132,13 +191,28 @@ class PlotNode(AbstractNodeItem):
     def process(self, **kwds):
         kwds = super().process(**kwds)
 
-        if "x-Achse" in kwds and "y-Achse" in kwds:
+        self.sig = "v("+ kwds.get("Signal") +")"
+        self.ref = kwds.get("Ref")
+        if self.ref is not None:
+            self.ref = "v("+self.ref+")"
+
+        print("PLOT", self.sig, self.ref, kwds)
+
+    def setData(self, data):
+        x = data.get("time", None)
+        sig = data.get(self.sig, None)
+        ref = data.get(self.ref, None)
+
+        if ref is not None:
+            sig = np.array(sig) - np.array(ref)
+
+        if sig is not None and x is not None:
             self.plot.setDownsampleData(
-                x=np.array(kwds["x-Achse"]),
-                y=np.array(kwds["y-Achse"])
+                x=np.array(x),
+                y=np.array(sig)
             )
-        elif "y-Achse" in kwds:
-            self.plot.setDownsampleData(y=kwds["y-Achse"])
+        elif sig is not None:
+            self.plot.setDownsampleData(y=sig)
         else:
             self.plot.setDownsampleData(x=[0,0.001], y=[0,0])
 
@@ -147,6 +221,8 @@ class DataNode(AbstractNodeItem):
     def __init__(self, name, filename):
         super().__init__(name)
         self.filename = filename
+
+        self.time = None
         self.data = dict()
 
     def parseFile(self):
@@ -156,11 +232,7 @@ class DataNode(AbstractNodeItem):
             except:
                 return
 
-            self.data["Zeit"] = np.linspace(0, len(data) / fs, len(data))
-            self.createAttributeSig.emit(
-                self.name(),
-                {"name":"Zeit", "index":-1, "preset":"attr_preset_1", "plug":True, "socket":False, "dataType":int}
-            )
+            self.time = np.linspace(0, len(data) / fs, len(data))
 
             if len(data.shape) > 1:
                 length = data.shape[1]
@@ -168,11 +240,15 @@ class DataNode(AbstractNodeItem):
                 length = 1
 
             for i in range(0, length):
-                self.data["Kanal "+str(i)] = data
+                self.data["Kanal "+str(i)+" +"] = data
 
                 self.createAttributeSig.emit(
                     self.name(),
-                    {"name":"Kanal "+ str(i), "index":-1, "preset":"attr_preset_2", "plug":True, "socket":False, "dataType":int}
+                    {"name":"Kanal "+str(i)+" +", "index":-1, "preset":"attr_preset_2", "plug":True, "socket":False, "dataType":int}
+                )
+                self.createAttributeSig.emit(
+                    self.name(),
+                    {"name":"Kanal "+str(i)+" -", "index":-1, "preset":"attr_preset_1", "plug":True, "socket":False, "dataType":int}
                 )
             print(self.data)
         else:
@@ -180,4 +256,76 @@ class DataNode(AbstractNodeItem):
 
     def process(self, **kwds):
         kwds = super().process(**kwds)
-        return { k+"/P/": v for k, v in self.data.items() }
+        name = self.name().replace(" ", "_").replace(".","_")
+
+        # generate input files for all possible channels
+        net_names = dict()
+        outputs = self.outputs()
+        for i, val in enumerate(self.data):
+            # generate file
+            filename = "{0}_input_{1}.m".format(
+                name,
+                str(i)
+            )
+            # populate file with own timestamp
+            values = np.array(self.data[val], dtype=np.float64)
+            time = self.time
+            df = pd.DataFrame({
+                "time": time,
+                "val": values
+            })
+            df.to_csv(os.path.abspath(Config.TEMP_DIR+filename),
+                    sep=" ", header=False, index=False, float_format="%0.06e")
+
+            # generate net names
+            net_names[val] = "{0}_input_{1}".format(name, str(i))
+            # generate refrence net names if used
+            ref_net = outputs.get("Kanal "+str(i)+ " -/P/", None)
+            if ref_net is not None:
+                if len(ref_net.connections()) > 0:
+                    net_names["Kanal "+str(i)+ " -"] = "{0}_refrence_{1}".format(name, str(i))
+
+            # write sources to .net ## ngspice specific ##
+            signal_net_name =   net_names.get("Kanal "+str(i)+ " +")
+            ref_net_name =      net_names.get("Kanal "+str(i)+ " -", "0")
+
+            template = getSrcTemplate("{0}_{1}".format(name, str(i)),
+                    Config.TEMP_DIR+filename, signal_net_name, ref_net_name)
+
+            insertIntoTemplate(template, "sources")
+
+        # prepend port identifier to data
+        names = dict()
+        for n in net_names.keys():
+            names[n+"/P/"] = net_names.get(n)
+
+        print(self.name(), "DONE", names, kwds.keys())
+        return names
+
+
+def getSrcTemplate(number, filename, signal, ref): # FIXME AMPSCALE SHOULD BE 1
+    if Config.simulator == "ngspice":
+        return """* INPUT SOURCE {0}
+.model filesrc filesource (file="{1}" amploffset=[0] amplscale=[0.001]
++                           timeoffset=0 timescale=1
++                           timerelative=false amplstep=false)
+a{0} %vd([{2}, {3}]) filesrc
+""".format(number, filename, signal, ref)
+
+
+def insertIntoTemplate(insert, section):
+
+    if "sources" in section:
+        divider = "*-----BEGIN USER SOURCES-----*"
+    elif "nets" in section:
+        divider = "*-----BEGIN USER NETLIST-----*"
+    elif "models" in section:
+        divider = "*-----BEGIN USER MODELS-----*"
+    else:
+        divider = section
+        print("unknown section")
+
+    for line in fileinput.FileInput(Config.TEMP_DIR + Config.template, inplace=1):
+        if divider in line:
+            line=line.replace(line,line+"\n"+insert)
+        print(line, end="")
