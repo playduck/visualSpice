@@ -7,12 +7,13 @@ import sys
 import os.path
 import copy
 from pathlib import Path
-import json
+import shutil
 
 import Config
 import PlotViewer
 import NodeScene
 import NodeItem
+import Interface
 
 import pyqtgraph as pg
 from pyqtgraph import flowchart as fl
@@ -27,7 +28,9 @@ import qtmodern.windows
 class visualSpiceWindow(QtWidgets.QMainWindow):
     def __init__(self):
         super(visualSpiceWindow, self).__init__()
+
         # generate TEMP DIR for simulations
+        shutil.rmtree(Config.TEMP_DIR)
         Path(Config.TEMP_DIR).mkdir(parents=True, exist_ok=True)
 
         uic.loadUi(Config.getResource("ui/main.ui"), self)
@@ -123,7 +126,7 @@ class visualSpiceWindow(QtWidgets.QMainWindow):
             color[0] = (color[0] + 10 + 10 * i) % 360
 
         qc = QtGui.QColor()
-        print(color)
+        # print(color)
         qc.setHsv(color[0], color[1] * 2.55, color[2] * 2.55)
         return qc
 
@@ -150,7 +153,7 @@ class visualSpiceWindow(QtWidgets.QMainWindow):
     def addNewSim(self):
         activeScene = self._getActiveScene()
         filename, filetype = QtWidgets.QFileDialog.getOpenFileName(self, "Datei Hinzufügen", "",
-                "circuit (*.cir);;Alle Dateinen (*)")
+                "circuit (*.net);;Alle Dateinen (*)")
 
         if filename:
             userData = NodeItem.SimulationNode(self.getFreeName(os.path.basename(filename)), filename)
@@ -172,9 +175,13 @@ class visualSpiceWindow(QtWidgets.QMainWindow):
         node = activeScene.createNode(name=userData.name(), preset='node_preset_1', position=position, userData=userData)
 
         # no need to use attrribute createion via signal since these attributes are always static
-        activeScene.createAttribute(node=node, name='x-Achse', index=-1, preset='attr_preset_1',
+        # activeScene.createAttribute(node=node, name='x-Achse', index=-1, preset='attr_preset_1',
+        #                     plug=False, socket=True, dataType=int)
+        # activeScene.createAttribute(node=node, name='y-Achse', index=-1, preset='attr_preset_1',
+        #                     plug=False, socket=True, dataType=int)
+        activeScene.createAttribute(node=node, name='Signal', index=-1, preset='attr_preset_1',
                             plug=False, socket=True, dataType=int)
-        activeScene.createAttribute(node=node, name='y-Achse', index=-1, preset='attr_preset_1',
+        activeScene.createAttribute(node=node, name='Ref', index=-1, preset='attr_preset_1',
                             plug=False, socket=True, dataType=int)
 
         self._refocus()
@@ -195,8 +202,9 @@ class visualSpiceWindow(QtWidgets.QMainWindow):
 
         self._refocus()
 
+
     def run(self):
-        progress = pg.ProgressDialog("simulieren...")
+        progress = pg.ProgressDialog("simuliert...")
         evaluated = self.mainNodeScene.evaluateGraph()
         progress += 10
 
@@ -226,27 +234,54 @@ class visualSpiceWindow(QtWidgets.QMainWindow):
         # dialog.show()
         # dialog.exec_()
 
+        # generate sim file
+        shutil.copyfile(
+            os.path.abspath(Config.template),
+            Config.TEMP_DIR + Config.template
+        )
+        # TODO Apply Settings
+
         # run fc
         try:
             fc.process()
+            progress += 10
         except Exception as e:
+            print("\n>>> Cannot process fc")
             print(e)
+            print("\n")
+        else:
+            sim = Interface.Interface(Config.TEMP_DIR + Config.template)
+            try:
+                sim.runSim()
+            except Exception as e:
+                print("\n>>> Cannot execute sim")
+                print(e)
+                print("\n")
+            else:
+                progress += 10
 
-        progress += 10
+                data = sim.readRaw()
+                print("DATA")
+                print(data)
+                print()
+                progress += 10
 
-        self.plotViewer.plt.vb.autoRange()
-        progress += 10
+                for node in self.mainNodeScene.scene().nodes.values():
+                    if isinstance(node.userData, NodeItem.PlotNode):
+                        node.userData.setData(data)
 
-        # remove node terminals, cannot use for loop, since terminals dict will be mutated in iterations
-        for node in self.mainNodeScene.scene().nodes.values():
-            while len(node.userData.terminals) > 1:
-                node.userData.removeTerminal(node.userData.terminals[next(iter(node.userData.terminals))])
+                self.plotViewer.plt.vb.autoRange()
+        finally:
+            # remove node terminals, cannot use for loop, since terminals dict will be mutated in iterations
+            for node in self.mainNodeScene.scene().nodes.values():
+                while len(node.userData.terminals) > 1:
+                    node.userData.removeTerminal(node.userData.terminals[next(iter(node.userData.terminals))])
 
-        # cleanup
-        progress.setValue(100)
-        fc.clear()
-        fc.close()
-        del fc
+            # cleanup
+            progress.setValue(100)
+            fc.clear()
+            fc.close()
+            del fc
 
 
 if __name__ == "__main__":
