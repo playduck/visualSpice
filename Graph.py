@@ -59,11 +59,11 @@ class Graph(pg.PlotDataItem):
 
         samples = math.ceil( (stop - start) / (x[-1] - x[0]) * len(x) )
         newSamples = int(max(10, min(4000, math.ceil(1.0 / (self.limit * samples)))))
-        print(self.limit, start, stop, samples, newSamples)
+        # print(self.limit, start, stop, samples, newSamples)
 
         if len(y) >= self.limit:
             y,x = signal.resample(y, num=newSamples, t=x)
 
-        print(len(x), len(y))
+        # print(len(x), len(y))
 
         self.setData(x=x, y=y)

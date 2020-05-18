@@ -261,9 +261,6 @@ class visualSpiceWindow(QtWidgets.QMainWindow):
                 progress += 10
 
                 data = sim.readRaw()
-                print("DATA")
-                print(data)
-                print()
                 progress += 10
 
                 for node in self.mainNodeScene.scene().nodes.values():
