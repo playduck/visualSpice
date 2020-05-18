@@ -64,9 +64,7 @@ class SimulationNode(AbstractNodeItem):
 
         fobj = open(self.simFile, "r")
         text = fobj.read()
-        m = re.findall("(^(\.model) (\S*) (.*)(\\n\+.*)*)", text, re.MULTILINE)
-        if m is not None:
-            parsed_models.append(m)
+        parsed_models = re.findall("(\.(MODEL|model) (\S+) (.*\n\+.*)+)", text, re.MULTILINE)
 
         for line in text.splitlines():
             n = re.search("^([A-Z|a-z]+[0-9])\s([a-zA-Z0-9|_]+)\s([a-zA-Z0-9|_]+)\s(.*)$", line, re.M)
@@ -74,13 +72,13 @@ class SimulationNode(AbstractNodeItem):
                 nets.append(n.groups())
 
         models = list()
-        for m in parsed_models[0]:
+        for m in parsed_models:
             if "filesrc" not in m[2]:
                 new_name = name+"_"+m[2]
                 models.append({
                     "name": m[2],
                     "new_name": new_name,
-                    "body": m[0].replace(m[2], new_name, 1)
+                    "body": m[0].replace(m[2], new_name, 1) + "\n"
                 })
 
         net_names = dict()
@@ -304,7 +302,7 @@ class DataNode(AbstractNodeItem):
 
 
 def getSrcTemplate(number, filename, signal, ref): # FIXME AMPSCALE SHOULD BE 1
-    if Config.simulator == "ngspice":
+    if Config.simulator == "NGSPICE":
         return """* INPUT SOURCE {0}
 .model filesrc filesource (file="{1}" amploffset=[0] amplscale=[0.001]
 +                           timeoffset=0 timescale=1
