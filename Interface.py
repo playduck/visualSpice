@@ -28,17 +28,17 @@ class Interface(object):
     def prepareSimulation(self, time=None, value=None):
         values = pd.DataFrame({"time": time, "value": value})
 
-        if Config.simulator == "LTSpice":
+        if Config.simulator == "LTSPICE":
             pass
-        elif Config.simulator == "ngspice":
+        elif Config.simulator == "NGSPICE":
             values.to_csv(Config.TEMP_DIR+"input.m", sep=" ", header=True, index=False, float_format="%.6e")
             self._replaceInFile("__INPUT_FILE__", Config.TEMP_DIR+"input.m")
 
     def runSim(self):
-        if Config.simulator == "LTSpice":
+        if Config.simulator == "LTSPICE":
             pass # TODO
-        elif Config.simulator == "ngspice":
-            process = "ngspice"
+        elif Config.simulator == "NGSPICE":
+            process = "NGSPICE"
 
             out = subprocess.run([
                 process,
@@ -60,7 +60,7 @@ class Interface(object):
                         raise Exception("Simulation Failed")
 
     def readRaw(self):
-        if Config.simulator == "LTSpice":
+        if Config.simulator == "LTSPICE":
             data = ltspice.Ltspice(self.filename)
             data.parse()
 
@@ -75,7 +75,7 @@ class Interface(object):
 
             return d
 
-        elif Config.simulator == "ngspice":
+        elif Config.simulator == "NGSPICE":
             # shameless rip from
             # https://gist.github.com/snmishra/27dcc624b639c2626137
 
