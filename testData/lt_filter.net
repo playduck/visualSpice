@@ -1,6 +1,6 @@
 * rc filter
 
-V1 in 0 PWL(0 0 +1m 10 +100m 10 +1m 0)
+V1 in 0 PWL(FILE=__INPUT_FILE__)
 
 R1 in 1 1K
 C1 1 0 10e-6

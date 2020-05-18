@@ -86,16 +86,19 @@ class SimulationNode(AbstractNodeItem):
         # replace names with unique names or connected ones
         for component in nets:
             cname = "{0}_{1}".format(component[0], name)
+            if component[0].startswith("V"):
+                # skip voltage sources
+                continue
 
             cfrom = "0"
-            if "v("+component[1]+")" in kwds:
-                cfrom = kwds.get("v("+component[1]+")")
+            if "V("+component[1]+")" in kwds:
+                cfrom = kwds.get("V("+component[1]+")")
             elif component[1] != "0":
                 cfrom = "{0}_{1}".format(component[1], name)
 
             cto = "0"
-            if "v("+component[2]+")" in kwds:
-                cto = kwds.get("v("+component[2]+")")
+            if "V("+component[2]+")" in kwds:
+                cto = kwds.get("V("+component[2]+")")
             elif component[2] != "0":
                 cto = "{0}_{1}".format(component[2], name)
 
@@ -107,9 +110,9 @@ class SimulationNode(AbstractNodeItem):
             template += "{0} {1} {2} {3}\n".format(cname, cfrom, cto, val)
 
             if component[1] != "0":
-                net_names["v("+component[1]+")"] = cfrom
+                net_names["V("+component[1]+")"] = cfrom
             if component[2] != "0":
-                net_names["v("+component[2]+")"] = cto
+                net_names["V("+component[2]+")"] = cto
 
         insertIntoTemplate(template, "nets")
         for model in models:
@@ -189,10 +192,10 @@ class PlotNode(AbstractNodeItem):
     def process(self, **kwds):
         kwds = super().process(**kwds)
 
-        self.sig = "v("+ kwds.get("Signal") +")"
+        self.sig = "V("+ kwds.get("Signal") +")"
         self.ref = kwds.get("Ref")
         if self.ref is not None:
-            self.ref = "v("+self.ref+")"
+            self.ref = "V("+self.ref+")"
 
         print("PLOT", self.sig, self.ref, kwds)
 
@@ -283,7 +286,7 @@ class DataNode(AbstractNodeItem):
                 if len(ref_net.connections()) > 0:
                     net_names["Kanal "+str(i)+ " -"] = "{0}_refrence_{1}".format(name, str(i))
 
-            # write sources to .net ## ngspice specific ##
+            # write sources to .net
             signal_net_name =   net_names.get("Kanal "+str(i)+ " +")
             ref_net_name =      net_names.get("Kanal "+str(i)+ " -", "0")
 
@@ -300,10 +303,22 @@ class DataNode(AbstractNodeItem):
         print(self.name(), "DONE", names, kwds.keys())
         return names
 
+def getSrcTemplate(number, filename, signal, ref):
+    print(number, filename, signal, ref, "\n\n")
+    if Config.simulator == "LTSPICE":
+        return getLTSrcTemplate(number, filename, signal, ref)
+    else:
+        return getNGSrcTemplate(number, filename, signal, ref)
 
-def getSrcTemplate(number, filename, signal, ref): # FIXME AMPSCALE SHOULD BE 1
-    if Config.simulator == "NGSPICE":
-        return """* INPUT SOURCE {0}
+
+def getLTSrcTemplate(number, filename, signal, ref):
+    return """* INPUT SOURCE {0}
+V{0} {2} {3} PWL(FILE={1})
+""".format(number, filename, signal, ref)
+
+
+def getNGSrcTemplate(number, filename, signal, ref): # FIXME AMPSCALE SHOULD BE 1
+    return """* INPUT SOURCE {0}
 .model filesrc filesource (file="{1}" amploffset=[0] amplscale=[0.001]
 +                           timeoffset=0 timescale=1
 +                           timerelative=false amplstep=false)
