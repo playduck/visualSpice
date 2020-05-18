@@ -1,0 +1,10 @@
+* rc filter
+
+V1 in 0 PWL(0 0 +1m 10 +100m 10 +1m 0)
+
+R1 in 1 1K
+C1 1 0 10e-6
+
+.tran 5s
+.save all
+.end

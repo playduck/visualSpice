@@ -1,0 +1,15 @@
+*ltspice template
+
+*-----BEGIN USER MODELS-----*
+
+*-----END USER MODELS-----*
+*-----BEGIN USER SOURCES-----*
+
+*-----END USER SOURCES-----*
+*-----BEGIN USER NETLIST-----*
+
+*-----END USER NETLIST-----*
+
+.tran 100u 5
+.save all
+.end

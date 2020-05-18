@@ -1,0 +1,31 @@
+*
+******************************************
+*
+*1N4ADAM
+*
+*
+*Spice model for a made up diode used in
+*my LTspice adding models tutorial at
+*https://www.adamsiembida.com/
+*
+******************************************
+*
+.SUBCKT 1NADAM 1 2
+*
+*
+R1 1 2 5E+9
+D1 1 2 INTDIO
+*
+.MODEL INTDIO D
++ IS = 7.0E-9
++ N = 1.5
++ BV = 30
++ IBV = 0.00025
++ RS = 0.20
++ CJO = 5.0E-13
++ VJ = 0.80
++ M = 0.030
++ FC = 0.50
++ TT = 3.0E-9
+.ENDS
+*
