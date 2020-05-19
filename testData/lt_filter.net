@@ -3,7 +3,7 @@
 V1 in 0 PWL(FILE=__INPUT_FILE__)
 
 R1 in 1 1K
-C1 1 0 10e-6
+C1 1 0 24e-6
 
 .tran 5s
 .save all

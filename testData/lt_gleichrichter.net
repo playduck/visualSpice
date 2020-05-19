@@ -1,0 +1,23 @@
+*
+V1 in ref PWL(FILE=__INPUT_FILE__)
+*
+D1 in out   INTDIO
+D2 0 in     INTDIO
+D3 ref out  INTDIO
+D4 0 ref    INTDIO
+*
+.MODEL INTDIO D
++ IS = 7.0E-9
++ N = 1.5
++ BV = 30
++ IBV = 0.00025
++ RS = 0.20
++ CJO = 5.0E-13
++ VJ = 0.80
++ M = 0.030
++ FC = 0.50
++ TT = 3.0E-9
+
+.tran 5s
+.save all
+.end
