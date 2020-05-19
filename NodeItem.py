@@ -67,7 +67,7 @@ class SimulationNode(AbstractNodeItem):
         parsed_models = re.findall("(\.(MODEL|model) (\S+) (.*\n\+.*)+)", text, re.MULTILINE)
 
         for line in text.splitlines():
-            n = re.search("^([A-Z|a-z]+[0-9])\s([a-zA-Z0-9|_]+)\s([a-zA-Z0-9|_]+)\s(.*)$", line, re.M)
+            n = re.search("^([A-Za-z]+[0-9]+)\s([a-zA-Z0-9|_]+)\s([a-zA-Z0-9|_]+)\s(.*)$", line, re.M)
             if n is not None:
                 nets.append(n.groups())
 
@@ -84,7 +84,9 @@ class SimulationNode(AbstractNodeItem):
         net_names = dict()
         template = ""
         # replace names with unique names or connected ones
+        print(kwds)
         for component in nets:
+            print(component)
             cname = "{0}_{1}".format(component[0], name)
             if component[0].startswith("V"):
                 # skip voltage sources
@@ -104,8 +106,9 @@ class SimulationNode(AbstractNodeItem):
 
             val = component[3]
             for model in models:
-                if component[3] == model["name"]:
+                if model["name"] == component[3].strip():
                     val =  model["new_name"]
+                    break
 
             template += "{0} {1} {2} {3}\n".format(cname, cfrom, cto, val)
 
@@ -123,8 +126,6 @@ class SimulationNode(AbstractNodeItem):
         for k in net_names.keys():
             new_names[k + "/P/"] = net_names.get(k)
 
-        print("net_names\n", net_names)
-
         return new_names
 
     def readData(self):
@@ -133,17 +134,19 @@ class SimulationNode(AbstractNodeItem):
         self.data = data
 
         for var in self.data.keys():
-            print(len(self.data[var]))
-
             if "TIME" in var.upper():
                 continue
             elif "V(" in var.upper():
+                var = "V"+ var[1:] # capitalize V
                 preset = "attr_preset_2"
             elif "I(" in var.upper():
+                var = "I"+ var[1:]
                 preset = "attr_preset_3"
                 continue # TODO?
             else:
                 preset = "attr_preset_1"
+                print("unknown", var)
+
 
             self.createAttributeSig.emit( self.name(),
                 {"name":var, "index":-1, "preset":preset, "plug":True, "socket":True, "dataType":int}
@@ -251,7 +254,6 @@ class DataNode(AbstractNodeItem):
                     self.name(),
                     {"name":"Kanal "+str(i)+" -", "index":-1, "preset":"attr_preset_1", "plug":True, "socket":False, "dataType":int}
                 )
-            print(self.data)
         else:
             print("unknown file format")
 
@@ -299,21 +301,18 @@ class DataNode(AbstractNodeItem):
         names = dict()
         for n in net_names.keys():
             names[n+"/P/"] = net_names.get(n)
-
-        print(self.name(), "DONE", names, kwds.keys())
         return names
 
 def getSrcTemplate(number, filename, signal, ref):
-    print(number, filename, signal, ref, "\n\n")
     if Config.simulator == "LTSPICE":
         return getLTSrcTemplate(number, filename, signal, ref)
     else:
         return getNGSrcTemplate(number, filename, signal, ref)
 
 
-def getLTSrcTemplate(number, filename, signal, ref):
+def getLTSrcTemplate(number, filename, signal, ref): # FIXME VAL SCALE SHOULD BE 1
     return """* INPUT SOURCE {0}
-V{0} {2} {3} PWL(FILE={1})
+V{0} {2} {3} PWL TIME_SCALE_FACTOR=1 VALUE_SCALE_FACTOR=0.001 (FILE={1})
 """.format(number, filename, signal, ref)
 
 
@@ -327,7 +326,6 @@ a{0} %vd([{2}, {3}]) filesrc
 
 
 def insertIntoTemplate(insert, section):
-
     if "sources" in section:
         divider = "*-----BEGIN USER SOURCES-----*"
     elif "nets" in section:

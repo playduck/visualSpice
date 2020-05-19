@@ -54,13 +54,8 @@ class Interface(object):
                 process,
                 "-b", Config.TEMP_DIR+self.filename+".net"
             ])
-            self._replaceInFile("__INPUT_FILE__", Config.TEMP_DIR+"input.m", Config.TEMP_DIR+self.filename+".net")
-
-            with open(Config.TEMP_DIR + self.filename + ".log" , 'r+') as f:
-                for line in f:
-                    if "error" in line:
-                        print("Simulation failed")
-                        raise Exception("Simulation Failed")
+            self._replaceInFile("__INPUT_FILE__",
+                    Config.TEMP_DIR+"input.m", Config.TEMP_DIR+self.filename+".net")
 
         elif Config.simulator == "NGSPICE":
             process = "ngspice"
@@ -70,35 +65,27 @@ class Interface(object):
                 "-o", Config.TEMP_DIR + self.filename +".log",
                 "-b -a", self.simFile
             ])
-
             self._replaceInFile(Config.TEMP_DIR+"input.m", "__INPUT_FILE__")
 
-            # parse log
-            with open(Config.TEMP_DIR + self.filename + ".log" , 'r+') as f:
-                for line in f:
-                    if "run simulation(s) aborted" in line or "cannot open file" in line or "error" in line:
-                        print("Simulation failed")
-                        raise Exception("Simulation Failed")
+        with open(Config.TEMP_DIR + self.filename + ".log" , 'r+') as f:
+            for line in f:
+                if "ERROR" in line.upper():
+                    print("Simulation failed")
+                    raise Exception("Simulation Failed")
 
     def readRaw(self):
         if Config.simulator == "LTSPICE":
-            print("PATH", Config.TEMP_DIR+self.filename+".raw")
             raw = ltspice.Ltspice(Config.TEMP_DIR+self.filename+".raw")
             raw.parse()
 
-            print("\n\nvarnames",raw.getVariableNames(),
-             len(raw.getVariableNames()), raw.getVariableNumber(), "\n\n")
-
-            d = dict()
+            data = dict()
             for var in raw.getVariableNames():
-                try:
-                    d[var] = np.array(raw.getData(var))
-                except Exception as e:
-                    print(e)
-
-            print("\n\nD",d.keys(),"\n\n")
+                if var == "time":
+                    data["time"] = raw.getTime()
+                else:
+                    data[var] = raw.getData(var)
             del raw
-            return d
+            return data
 
         elif Config.simulator == "NGSPICE_WRDATA":
             read = pd.read_csv(Config.TEMP_DIR+"output.m", delimiter="\s+")
@@ -161,12 +148,19 @@ class Interface(object):
                 else:
                     break
 
-            arr = dict()
+            d = dict()
             for i, var in  enumerate(plots[0]["varnames"]):
-                arr[var] = list()
+                name = var
+                # capitalize V or I
+                if "v(" in var:
+                    name = "V"+var[1:]
+                if "i(" in var:
+                    name = "I"+var[1:]
+
+                d[name] = list()
                 for data in arrs[0]:
-                    arr[var].append(data[i].real)
-                arr[var] = np.array(arr[var])
+                    d[name].append(data[i].real)
+                d[name] = np.array(d[name])
 
 
-            return arr
+            return d

@@ -23,4 +23,4 @@ COLORS = [
 
 TEMP_DIR = os.path.abspath("./temp") + "/"
 template = "./ltspice_template.net"
-simulator = "LTSPICE"
+simulator = "NGSPICE"
