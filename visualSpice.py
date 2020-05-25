@@ -149,6 +149,90 @@ class visualSpiceWindow(QtWidgets.QMainWindow):
         else:
             return name + " " + str(count)
 
+    def handleZChange(self, action, plot):
+        for node in self.mainNodeScene.scene().nodes.values():
+            if isinstance(node.userData, NodeItem.PlotNode):
+                print(node.userData.plot.zValue())
+
+        print(">>>", action, plot.zValue())
+
+        def _findTop():
+            greatest = np.NaN
+            for node in self.mainNodeScene.scene().nodes.values():
+                if isinstance(node.userData, NodeItem.PlotNode) and not node.userData.plot == plot:
+                    value = node.userData.plot.zValue()
+                    if value > greatest or np.isnan(greatest):
+                        greatest = value
+            return greatest
+
+        def _findBottom():
+            least = np.NaN
+            for node in self.mainNodeScene.scene().nodes.values():
+                if isinstance(node.userData, NodeItem.PlotNode) and node.userData.plot is not plot:
+                    value = node.userData.plot.zValue()
+                    if value < least or np.isnan(least):
+                        least = value
+            return least
+
+        if action == "FG":
+            # find greatest zValue
+            greatest = _findTop()
+            # if not already at the top
+            if plot.zValue() <= greatest:
+                plot.setZValue(greatest + 1)
+
+        elif action == "BG":
+            # find smallest zValue
+            least = _findBottom()
+            # if not already at the bottom
+            if plot.zValue() > least:
+                plot.setZValue(least - 1)
+
+        elif action == "FOR":
+            # find zValue greater than current
+            current = plot.zValue()
+            nextEl = np.nan
+            for node in self.mainNodeScene.scene().nodes.values():
+                if isinstance(node.userData, NodeItem.PlotNode):
+                    value = node.userData.plot.zValue()
+                    if value > current:
+                        nextEl = min(value, nextEl)
+
+            if np.isnan(nextEl):
+                return
+
+            for node in self.mainNodeScene.scene().nodes.values():
+                if isinstance(node.userData, NodeItem.PlotNode):
+                    value = node.userData.plot.zValue()
+                    if value > nextEl:
+                        node.userData.plot.setZValue(value + 1)
+            plot.setZValue(nextEl + 1)
+
+        elif action == "BACK":
+            # find ZValue less than current
+            current = plot.zValue()
+            nextEl = np.nan
+            for node in self.mainNodeScene.scene().nodes.values():
+                if isinstance(node.userData, NodeItem.PlotNode):
+                    value = node.userData.plot.zValue()
+                    if value < current:
+                        nextEl = max(value, nextEl)
+
+            if np.isnan(nextEl):
+                return
+
+            for node in self.mainNodeScene.scene().nodes.values():
+                if isinstance(node.userData, NodeItem.PlotNode):
+                    value = node.userData.plot.zValue()
+                    if value < nextEl:
+                        node.userData.plot.setZValue(value - 1)
+            plot.setZValue(nextEl - 1)
+
+        print("<<<", plot.zValue())
+        for node in self.mainNodeScene.scene().nodes.values():
+            if isinstance(node.userData, NodeItem.PlotNode):
+                print(node.userData.plot.zValue())
+        print()
 
     def addNewSim(self):
         activeScene = self._getActiveScene()
@@ -156,13 +240,16 @@ class visualSpiceWindow(QtWidgets.QMainWindow):
                 "circuit (*.net);;Alle Dateinen (*)")
 
         if filename:
-            userData = NodeItem.SimulationNode(self.getFreeName(os.path.basename(filename)), filename)
-            userData.createAttributeSig.connect(self._createAttribute)
+            try:
+                userData = NodeItem.SimulationNode(self.getFreeName(os.path.basename(filename)), filename)
+                userData.createAttributeSig.connect(self._createAttribute)
 
-            position = activeScene.mapToScene(self.sceneTabWidget.width() / 2, self.sceneTabWidget.height() / 2)
-            node = activeScene.createNode(name=userData.name(), preset='node_preset_1', position=position, userData=userData)
+                position = activeScene.mapToScene(self.sceneTabWidget.width() / 2, self.sceneTabWidget.height() / 2)
+                node = activeScene.createNode(name=userData.name(), preset='node_preset_1', position=position, userData=userData)
 
-            userData.readData()
+                userData.readData()
+            except Exception as e:
+                print("error in node creation:", e)
 
             self._refocus()
 
@@ -170,6 +257,8 @@ class visualSpiceWindow(QtWidgets.QMainWindow):
         activeScene = self._getActiveScene()
 
         userData = NodeItem.PlotNode(self.getFreeName("plotViewer"), self.plotViewer, self._getColor())
+        userData.changeIndex.connect(self.handleZChange)
+        self.handleZChange("FG", userData.plot) # set initial z Value
 
         position = activeScene.mapToScene(self.sceneTabWidget.width() / 2, self.sceneTabWidget.height() / 2)
         node = activeScene.createNode(name=userData.name(), preset='node_preset_1', position=position, userData=userData)
@@ -250,8 +339,8 @@ class visualSpiceWindow(QtWidgets.QMainWindow):
             print(e)
             print("\n")
         else:
-            sim = Interface.Interface(Config.TEMP_DIR + Config.template)
             try:
+                sim = Interface.Interface(Config.TEMP_DIR + Config.template)
                 sim.runSim()
             except Exception as e:
                 print("\n>>> Cannot execute sim")

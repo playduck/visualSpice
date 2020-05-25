@@ -21,7 +21,6 @@ import Interface
 import Graph
 
 class AbstractNodeItem(fc.Node):
-
     createAttributeSig = QtCore.pyqtSignal("QString", dict)
 
     def __init__(self, name):
@@ -34,7 +33,7 @@ class AbstractNodeItem(fc.Node):
     def process(self, **kwds):
         # kwds will have one keyword argument per input terminal.
         kwds = { k.replace('/S/', ''): v for k, v in kwds.items() }
-        print("PROCESS", self.name(), kwds)
+        # print("PROCESS", self.name(), kwds)
         return kwds
 
     def delete(self):
@@ -45,9 +44,9 @@ class SimulationNode(AbstractNodeItem):
     def __init__(self, name, simFile):
         super().__init__(name)
         self._initSettings()
-        self.interface = Interface.Interface(simFile)
         self.simFile = simFile
 
+        self.interface = Interface.Interface(simFile)
         t = np.linspace(0, 0.1, 5)
         self.interface.prepareSimulation(
             time=t,
@@ -164,20 +163,28 @@ class SimulationNode(AbstractNodeItem):
 
 
 class PlotNode(AbstractNodeItem):
+    changeIndex = QtCore.pyqtSignal("QString", Graph.Graph)
+
     def __init__(self, name, plotViewer, color=None):
         super().__init__(name)
 
         self.plotViewer = plotViewer
-        self.plot = Graph.Graph(name=name, clipToView=True,  downsampleMethod="subsample")
+        self.plot = Graph.Graph(name=name, clipToView=True, downsampleMethod="subsample")
 
         self.color = color
 
         self.plotViewer.plt.addItem(self.plot)
 
         self.optionWidget = uic.loadUi(Config.getResource("ui/plotSettings.ui"))
+
         self.colorButton = pg.ColorButton(color=self.color)
         self.colorButton.sigColorChanged.connect(lambda val: self.applyChange("color", val.color()))
         self.optionWidget.colorBtnLayout.addWidget(self.colorButton)
+
+        self.optionWidget.btnBg.clicked.connect(    lambda: self.changeIndex.emit("BG", self.plot))
+        self.optionWidget.btnBack.clicked.connect(  lambda: self.changeIndex.emit("BACK", self.plot))
+        self.optionWidget.btnFor.clicked.connect(   lambda: self.changeIndex.emit("FOR", self.plot))
+        self.optionWidget.btnFg.clicked.connect(    lambda: self.changeIndex.emit("FG", self.plot))
 
         self.applyChange("color", self.color)
 
@@ -303,11 +310,14 @@ class DataNode(AbstractNodeItem):
             names[n+"/P/"] = net_names.get(n)
         return names
 
+
 def getSrcTemplate(number, filename, signal, ref):
     if Config.simulator == "LTSPICE":
         return getLTSrcTemplate(number, filename, signal, ref)
-    else:
+    elif Config.simulator == "NGSPICE":
         return getNGSrcTemplate(number, filename, signal, ref)
+    else:
+         return ""
 
 
 def getLTSrcTemplate(number, filename, signal, ref): # FIXME VAL SCALE SHOULD BE 1
