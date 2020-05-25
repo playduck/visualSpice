@@ -156,34 +156,26 @@ class visualSpiceWindow(QtWidgets.QMainWindow):
 
         print(">>>", action, plot.zValue())
 
-        def _findTop():
+        if action == "FG":
+            # find greatest zValue
             greatest = np.NaN
             for node in self.mainNodeScene.scene().nodes.values():
                 if isinstance(node.userData, NodeItem.PlotNode) and not node.userData.plot == plot:
                     value = node.userData.plot.zValue()
                     if value > greatest or np.isnan(greatest):
                         greatest = value
-            return greatest
-
-        def _findBottom():
-            least = np.NaN
-            for node in self.mainNodeScene.scene().nodes.values():
-                if isinstance(node.userData, NodeItem.PlotNode) and node.userData.plot is not plot:
-                    value = node.userData.plot.zValue()
-                    if value < least or np.isnan(least):
-                        least = value
-            return least
-
-        if action == "FG":
-            # find greatest zValue
-            greatest = _findTop()
             # if not already at the top
             if plot.zValue() <= greatest:
                 plot.setZValue(greatest + 1)
 
         elif action == "BG":
             # find smallest zValue
-            least = _findBottom()
+            least = np.NaN
+            for node in self.mainNodeScene.scene().nodes.values():
+                if isinstance(node.userData, NodeItem.PlotNode) and node.userData.plot is not plot:
+                    value = node.userData.plot.zValue()
+                    if value < least or np.isnan(least):
+                        least = value
             # if not already at the bottom
             if plot.zValue() > least:
                 plot.setZValue(least - 1)
