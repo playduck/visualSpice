@@ -75,10 +75,22 @@
    </attribute>
   </widget>
   <widget class="QDockWidget" name="settingsDockWidget">
+   <property name="sizePolicy">
+    <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+     <horstretch>0</horstretch>
+     <verstretch>0</verstretch>
+    </sizepolicy>
+   </property>
    <property name="minimumSize">
     <size>
      <width>200</width>
      <height>100</height>
+    </size>
+   </property>
+   <property name="maximumSize">
+    <size>
+     <width>600</width>
+     <height>524287</height>
     </size>
    </property>
    <property name="features">
@@ -94,7 +106,7 @@
   </widget>
   <widget class="QDockWidget" name="plotDockWidget">
    <property name="sizePolicy">
-    <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+    <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
      <horstretch>0</horstretch>
      <verstretch>0</verstretch>
     </sizepolicy>
