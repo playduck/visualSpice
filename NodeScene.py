@@ -11,9 +11,8 @@ import NodeItem
 
 class NodeScene(nodz_main.Nodz):
     def __init__(self):
-        super().__init__(None)
+        super().__init__(None, configPath=Config.getResource("assets/nodz_config.json"))
         # self.scene = nodz_main.Nodz(None)
-        self.loadConfig(filePath=Config.getResource("assets/nodz_config.json"))
         self.initialize()
         self.gridVisToggle = True
         self.gridSnapToggle = False
