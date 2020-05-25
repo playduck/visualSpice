@@ -7,9 +7,9 @@ abstrakter high-level Schaltkreis Simulator
 mit python > 3.7.7
 
 1. Repository klonen:
-    - `git clone https://github.com/playduck/visualSpice.git`
+    - `git --recurse-submodules clone https://github.com/playduck/visualSpice.git`
     - `cd visualSpice`
-    - `git submodule update --init --recursive`
+    - für ältere git Versionen `git submodule update --init --recursive`
 2. _(optional)_ virtual enviornment erstellen
     - `python3 -m venv ./venv`
     - venv aktivieren (von shell zu shell anders)
