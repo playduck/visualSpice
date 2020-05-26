@@ -49,7 +49,7 @@ class Interface(object):
                 os.remove(Config.TEMP_DIR+file)
 
         if Config.simulator == "LTSPICE":
-            process = "/Applications/LTspice.app/Contents/MacOS/LTspice"
+            process = Config.ltspicePath + "/Contents/MacOS/LTspice"
             out = subprocess.run([
                 process,
                 "-b", Config.TEMP_DIR+self.filename+".net"
@@ -58,7 +58,7 @@ class Interface(object):
                     Config.TEMP_DIR+"input.m", Config.TEMP_DIR+self.filename+".net")
 
         elif Config.simulator == "NGSPICE":
-            process = "ngspice"
+            process = Config.ngspicePath
             out = subprocess.run([
                 process,
                 "-r", Config.TEMP_DIR + self.filename +".raw",

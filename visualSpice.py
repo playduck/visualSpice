@@ -72,6 +72,7 @@ class visualSpiceWindow(QtWidgets.QMainWindow):
         self.focusBtn.clicked.connect(lambda: self.sceneTabWidget.currentWidget()._focus() )
 
         self.settingsBtn = QtWidgets.QPushButton(QtGui.QIcon(Config.getResource("assets/settings.png")), "Einstellungen")
+        self.settingsBtn.clicked.connect(self._showSettings)
 
         self.runSimBtn = QtWidgets.QPushButton(QtGui.QIcon(Config.getResource("assets/start.png")), "Start")
         self.runSimBtn.clicked.connect(self.run)
@@ -92,6 +93,52 @@ class visualSpiceWindow(QtWidgets.QMainWindow):
 
         self.show()
         # self.mainNodeScene._focus()
+
+    def _showSettings(self):
+        def _getFile(sim, edit):
+            if sim == "LTSPICE":
+                file = "LTSpice (*.app);;AlleDateien (*)"
+            elif sim == "NGSPICE":
+                file = "ngspice (*.app);;AlleDateien (*)"
+
+            filename, filetype = QtWidgets.QFileDialog.getOpenFileName(self, "Simulator", "", file)
+            if filename:
+                edit.setText(filename)
+
+        ui = uic.loadUi(Config.getResource("ui/settings.ui"), None)
+
+        simBox = ui.findChild(QtWidgets.QComboBox, "simComboBox")
+        if Config.simulator == "LTSPICE":
+            simBox.setCurrentIndex(1)
+        elif Config.simulator == "NGSPICE":
+            simBox.setCurrentIndex(0)
+
+        LTPath = ui.findChild(QtWidgets.QLineEdit, "LTPath")
+        NGPath = ui.findChild(QtWidgets.QLineEdit, "NGPath")
+        LTPath.setText(Config.ltspicePath)
+        NGPath.setText(Config.ngspicePath)
+
+        LTBtn = ui.findChild(QtWidgets.QPushButton, "LTBtn")
+        NGBtn = ui.findChild(QtWidgets.QPushButton, "NGBtn")
+        LTBtn.clicked.connect(lambda: _getFile("LTSPICE", LTPath))
+        NGBtn.clicked.connect(lambda: _getFile("NGSPICE", NGPath))
+
+        if ui.exec():
+            simulator = simBox.currentText().upper()
+            Config.simulator = simulator
+            if simulator == "LTSPICE":
+                Config.template = "./ltspice_template.net"
+            elif simulator == "NGSPICE":
+                Config.template = "./ngspice_template.net"
+
+            if LTPath.text() is not "":
+                Config.ltspicePath = LTPath.text()
+            if NGPath.text() is not "":
+                Config.ngspicePath = NGPath.text()
+
+
+            print(Config.simulator, Config.ltspicePath, Config.ngspicePath, Config.template)
+
 
     def _getActiveScene(self):
         return self.sceneTabWidget.currentWidget()
