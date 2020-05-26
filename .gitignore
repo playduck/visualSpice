@@ -5,7 +5,6 @@ __pycache__/*
 /venv/*
 /source/*
 /External Libraries/*
-/Nodz
 /temp
 
 # Build
