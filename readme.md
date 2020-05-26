@@ -1,6 +1,18 @@
 ![visualSpice](./assets/splash.jpg "visualSpice")
 
-abstrakter high-level Schaltkreis Simulator
+    abstrakter high-level Schaltkreis Simulator
+
+Generiert dynamische Netlists von Simulationsblöcken, führt diese mit .wav Dateien aus und zeigt diese an.
+
+Unterstützt [LTSpice](https://www.analog.com/en/design-center/design-tools-and-calculators/ltspice-simulator.html) und [ngspice](http://ngspice.sourceforge.net).
+
+### Screenshots
+
+![visualSpice Screenshot 0](./assets/visualSpice_0.png) | ![visualSpice Screenshot 1](./assets/visualSpice_1.png)
+ --- | ---
+Startverhalten von Gleichrichter und Filter in LTSpice | ngspice RC Low-pass Filter
+
+---
 
 ## Install
 
@@ -26,3 +38,16 @@ oder `make init run`
 ### Build
 
 `make build` bzw. manuel, wie im [makefile](makefile#L32) mit pyinstaller
+
+---
+
+## TODO
+
+- nutzerfreundliches Error handeling
+- flexibleres Netlist parseing
+- keyboard shortcuts
+- Daten exportieren
+- Simulationslänge abhängig der Eingangsdaten
+- tests mit mehreren Inputs
+- dynamisch plots updaten ohne neu zu simulieren (?)
+- windows support und builds
