@@ -30,8 +30,13 @@ class visualSpiceWindow(QtWidgets.QMainWindow):
         super(visualSpiceWindow, self).__init__()
 
         # generate TEMP DIR for simulations
-        shutil.rmtree(Config.TEMP_DIR)
-        Path(Config.TEMP_DIR).mkdir(parents=True, exist_ok=True)
+        try:
+            shutil.rmtree(Config.TEMP_DIR)
+        except Exception as e:
+            # no templfile to delete
+            pass
+        finally:
+            Path(Config.TEMP_DIR).mkdir(parents=True, exist_ok=True)
 
         uic.loadUi(Config.getResource("ui/main.ui"), self)
         self.setWindowTitle("visualSpice")
