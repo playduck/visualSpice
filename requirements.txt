@@ -1,7 +1,7 @@
 altgraph==0.17
 ltspice==0.4.2
 macholib==1.14
-numpy==1.18.4
+numpy==1.22.0
 pandas==1.0.3
 PyInstaller==3.6
 PyQt5==5.14.2
